@@ -47,14 +47,12 @@ export default function Header() {
           />
 
           {/* Menu suspenso */}
-          <View className="fixed top-16 left-4 bg-gray-900 rounded-lg shadow-xl z-50 border border-gray-700 overflow-hidden">
+          <View className="fixed ml-2 top-16 left-4 bg-gray-900 rounded-lg shadow-xl z-50 border border-gray-700 overflow-hidden" style={{ maxWidth: '90%', width: 'auto' }}>
             <TouchableOpacity
               onPress={() => {
                 setShowMenu(false);
-                router.push("/SessionHistory");
-              }}
-              className="w-full px-6 py-4 flex flex-row items-center gap-3"
-            >
+                router.push("/SessionHistory");}}
+              className="px-6 py-4 flex flex-row items-center gap-3 ml-2">
               <IconHistory />
               <Text className="text-white text-base">Histórico Geral</Text>
             </TouchableOpacity>

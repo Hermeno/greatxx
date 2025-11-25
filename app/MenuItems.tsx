@@ -1,3 +1,4 @@
+import CloseAccountButton from '@/components/CloseAccountButton';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -154,12 +155,13 @@ export default function MenuItems() {
           <Text className="text-white font-semibold text-lg">VER MEU PEDIDO</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => router.push('/fechamento')}
+        {/* <TouchableOpacity
+          onPress={() => router.push('/Checkout')}
           className="w-full py-4 rounded-full bg-red-600 items-center"
         >
           <Text className="text-white font-semibold text-lg">FECHAR CONTA</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <CloseAccountButton />
       </View>
     </View>
   );

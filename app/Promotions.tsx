@@ -120,7 +120,7 @@ export default function Promotions() {
           <GradientButton onPress={() => router.push('/OrderSummary')}>
             VER MEU PEDIDO
           </GradientButton>
-          <CloseAccountButton onPress={() => router.push('/fechamento')} />
+          <CloseAccountButton onPress={() => router.push('/Checkout')} />
         </View>
       </View>
     </View>

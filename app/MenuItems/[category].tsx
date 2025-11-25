@@ -176,9 +176,9 @@ export default function MenuItems() {
           )}
         </View>
 
-        <View className="space-y-4">
+        <View className="space-y-4 ">
           {filteredItems.map((item) => (
-            <View key={item.id} className="bg-white rounded-2xl p-4 shadow-lg flex-row gap-4">
+            <View key={item.id} className="bg-white rounded-2xl p-4 shadow-lg flex-row gap-4 mt-2">
               <Image 
                 source={{ uri: item.image_url }}
                 className="w-24 h-24 rounded-lg"
@@ -229,7 +229,7 @@ export default function MenuItems() {
 
 
         <TouchableOpacity
-          onPress={() => router.push('/fechamento')}
+          onPress={() => router.push('/Checkout')}
           className="w-full py-4 rounded-full bg-red-600 items-center"
         >
           <Text className="text-white font-semibold text-lg">FECHAR CONTA</Text>

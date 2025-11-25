@@ -93,7 +93,7 @@ export default function HomeMenu() {
           </TouchableOpacity>
         </View>
 
-        <CloseAccountButton onPress={() => router.push('/CloseAccountButton')} />
+        <CloseAccountButton />
       </View>
     </View>
   );

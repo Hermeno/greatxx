@@ -1,3 +1,5 @@
+import CloseAccountButton from '@/components/CloseAccountButton';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -36,23 +38,25 @@ export default function MenuOptions() {
 
         <View className="w-full space-y-4 mb-8">
           {categories.map((category) => (
-            <TouchableOpacity
-              key={category.slug}
-              onPress={() => router.push(`/MenuItems/${category.slug}`)}
-              className="w-full py-4 px-6 rounded-full bg-success mt-3 from-cyan-400 via-blue-500 to-pink-500 items-center"
-            >
-              <Text className="text-white font-semibold text-lg">{category.name}</Text>
+
+            <TouchableOpacity key={category.slug}
+               onPress={() => router.push(`/MenuItems/${category.slug}`)} activeOpacity={0.85} className='mt-2 mb-2'>
+              <LinearGradient
+                colors={["#34d399", "#ec4899"]}
+                start={[0, 0]}
+                end={[1, 1]}
+                style={{ width: '100%', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 999 }}
+              >
+                <Text className="text-white font-semibold text-lg text-center">{category.name}</Text>
+              </LinearGradient>
             </TouchableOpacity>
+
+
+
+
           ))}
         </View>
-
-        {/* CloseAccountButton placeholder */}
-        <TouchableOpacity
-          onPress={() => router.push('/fechamento')}
-          className="w-full py-4 px-6 rounded-full bg-red-600 items-center"
-        >
-          <Text className="text-white font-semibold text-lg">Fechar Conta</Text>
-        </TouchableOpacity>
+        <CloseAccountButton />
       </ScrollView>
     </View>
   );

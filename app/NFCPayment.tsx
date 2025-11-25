@@ -24,7 +24,7 @@ export default function NFCPayment() {
   }, [pulseAnim]);
 
   const handleSimulateApproach = () => {
-    router.push('/pagamento-concluido');
+    router.push('/PaymentComplete');
   };
 
   return (

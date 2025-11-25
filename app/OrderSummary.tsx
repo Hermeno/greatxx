@@ -16,7 +16,7 @@ export default function OrderSummary() {
       <View className="flex-1 bg-[#111111]">
         <Header />
 
-        <View className="pt-24 pb-8 px-6 max-w-md mx-auto">
+  <View className="pt-24 pb-8 px-4 w-full">
           <TouchableOpacity
             onPress={() => router.back()}
             className="flex-row items-center gap-2 mb-6"
@@ -42,7 +42,7 @@ export default function OrderSummary() {
     <ScrollView className="flex-1 bg-[#111111]">
       <Header />
 
-      <View className="pt-24 pb-8 px-2 max-w-md mx-auto">
+  <View className="pt-24 pb-8 px-4 w-full">
         <TouchableOpacity
           onPress={() => router.back()}
           className="flex-row items-center gap-2 mb-6"
@@ -107,7 +107,7 @@ export default function OrderSummary() {
 
 
 
-          <CloseAccountButton onPress={() => router.push('/fechamento')} />
+          <CloseAccountButton onPress={() => router.push('/Checkout')} />
         </View>
       </View>
     </ScrollView>

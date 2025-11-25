@@ -1,7 +1,7 @@
+import Header from "@/components/Header";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-// import Header from "@/components/Header";
 // import GradientButton from "@/components/GradientButton";
 
 
@@ -51,6 +51,7 @@ export default function SessionHistory() {
 
   return (
     <View className="flex-1 bg-[#111111]">
+      <Header />
       <ScrollView contentContainerStyle={{ padding: 24 }}>
         {/* Botão Voltar */}
         <TouchableOpacity

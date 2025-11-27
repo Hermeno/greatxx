@@ -1,8 +1,10 @@
 import CloseAccountButton from '@/components/CloseAccountButton';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Header from '../components/Header';
+import { useOrder } from '../contexts/OrderContext';
 
 interface MenuItem {
   id: number;
@@ -17,68 +19,54 @@ interface MenuItem {
 export default function MenuItems() {
   const { category } = useLocalSearchParams<{ category: string }>();
   const router = useRouter();
+  const { addItem, items: cartItems } = useOrder();
 
-  // Simulando contexto de pedidos
-  const restaurantId = 1; // exemplo
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [activeTab, setActiveTab] = useState<'menu' | 'promotions'>('menu');
-  const [items, setItems] = useState<{ id: number; name: string; quantity: number; price: number }[]>([]);
 
   useEffect(() => {
-    if (restaurantId) {
-      fetch(`/api/menu/${restaurantId}/${category}`)
-        .then(res => res.json())
-        .then(data => setMenuItems(data.items || []));
-    }
-  }, [restaurantId, category]);
+    // TODO: Buscar dados reais da API baseado na categoria
+    // const response = await fetchMenuItemsByCategory(category);
+    // setMenuItems(response.data);
+    setMenuItems([]);
+  }, [category]);
 
   const getItemQuantity = (itemId: number) => {
-    const item = items.find(i => i.id === itemId);
+    const item = cartItems.find((i: any) => i.id === itemId);
     return item?.quantity || 0;
   };
 
   const handleAdd = (item: MenuItem) => {
-    const currentQty = getItemQuantity(item.id);
-    if (currentQty > 0) {
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
-    } else {
-      setItems(prev => [...prev, { id: item.id, name: item.name, quantity: 1, price: item.price }]);
-    }
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1
+    });
   };
 
   const handleSubtract = (itemId: number) => {
     const currentQty = getItemQuantity(itemId);
-    if (currentQty > 0) {
-      setItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i));
+    if (currentQty > 1) {
+      // TODO: Implementar updateQuantity no contexto
+    } else {
+      // TODO: Implementar removeItem no contexto
     }
   };
 
+
   // Para a aba de promoções
   useEffect(() => {
-    if (activeTab === 'promotions' && restaurantId) {
-      fetch(`/api/promotions-items/${restaurantId}`)
-        .then(res => res.json())
-        .then(data => {
-          const categoryPromotions = data.items?.filter((item: MenuItem) => item.category === category) || [];
-          setMenuItems(prev => {
-            const allItems = [...prev];
-            categoryPromotions.forEach((promoItem: MenuItem) => {
-              const existingIndex = allItems.findIndex(i => i.id === promoItem.id);
-              if (existingIndex >= 0) {
-                allItems[existingIndex] = { ...promoItem, is_promotion: true };
-              } else {
-                allItems.push({ ...promoItem, is_promotion: true });
-              }
-            });
-            return allItems;
-          });
-        });
+    if (activeTab === 'promotions') {
+      // TODO: Buscar dados de promoções da API
+      // const response = await fetchPromotions(restaurantId);
+      setMenuItems([]);
     }
-  }, [activeTab, restaurantId, category]);
+  }, [activeTab]);
 
   const filteredItems = activeTab === 'promotions' 
-    ? menuItems.filter(item => item.is_promotion)
-    : menuItems.filter(item => !item.is_promotion || activeTab === 'menu');
+    ? menuItems.filter((item: MenuItem) => item.is_promotion)
+    : menuItems.filter((item: MenuItem) => !item.is_promotion);
 
   return (
     <View className="flex-1 bg-[#111111]">
@@ -147,20 +135,17 @@ export default function MenuItems() {
         </View>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-6 bg-[#111111] border-t border-gray-800">
-        <TouchableOpacity
-          onPress={() => router.push('/OrderSummary')}
-          className="w-full py-4 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 items-center mb-3"
-        >
-          <Text className="text-white font-semibold text-lg">VER MEU PEDIDO</Text>
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity
-          onPress={() => router.push('/Checkout')}
-          className="w-full py-4 rounded-full bg-red-600 items-center"
-        >
-          <Text className="text-white font-semibold text-lg">FECHAR CONTA</Text>
-        </TouchableOpacity> */}
+      <View className="bottom-0 left-0 right-0 p-6 mb-2 bg-[#111111] border-t border-gray-800">
+          <TouchableOpacity onPress={() => router.push('/OrderSummary')} activeOpacity={0.85}>
+            <LinearGradient
+              colors={["#34d399", "#ec4899"]}
+              start={[0, 0]}
+              end={[1, 1]}
+              style={{ width: '100%', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 999, marginBottom: 8 }}
+            >
+              <Text className="text-white font-semibold text-lg text-center">VER MEU PEDIDO</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         <CloseAccountButton />
       </View>
     </View>

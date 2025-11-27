@@ -1,6 +1,8 @@
+import { useOrder } from "@/contexts/OrderContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+
 interface Restaurant {
   id: number;
   name: string;
@@ -8,17 +10,6 @@ interface Restaurant {
   distance_meters: number;
   is_near: boolean;
 }
-
-// on mount, check if user token exists; if not, redirect to login
-
-// Hook simulado (troque pelo seu real)
-const useOrder = () => {
-  return {
-    setRestaurant: (id: number, name: string) => {
-      console.log("Restaurante selecionado:", id, name);
-    },
-  };
-};
 
 export default function ChooseRestaurant() {
   const router = useRouter();

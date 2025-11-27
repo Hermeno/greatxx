@@ -1,7 +1,9 @@
+import { Entypo, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useOrder } from '../contexts/OrderContext';
+
 
 export default function ConfirmOrder() {
   const router = useRouter();
@@ -61,7 +63,7 @@ export default function ConfirmOrder() {
     });
 
     setTimeout(() => {
-      router.push('/MenuItems');
+      router.push('/MenuOptions');
     }, 3000);
   };
 
@@ -78,7 +80,8 @@ export default function ConfirmOrder() {
     return (
       <View className="flex-1 items-center justify-center bg-green-900 p-6">
         <View className="w-32 h-32 rounded-full bg-green-400 items-center justify-center mb-12">
-          <Text className="text-white text-5xl">✅</Text>
+          {/* <Text className="text-white text-5xl">✅</Text> */}
+          <Feather name="check" size={64} color="white" />
         </View>
 
         <Text className="text-white text-3xl font-bold mb-4">Pedido Confirmado!</Text>
@@ -96,7 +99,8 @@ export default function ConfirmOrder() {
 
       <View className="my-12 items-center">
         <View className="w-40 h-40 rounded-full bg-cyan-400 items-center justify-center mb-2">
-          <Text className="text-white text-6xl">🌊</Text>
+          {/* <Text className="text-white text-6xl">🌊</Text> */}
+          <Entypo name="air" size={48} color="white" />
         </View>
       </View>
 

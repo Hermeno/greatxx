@@ -91,7 +91,7 @@ export default function OrderSummary() {
             </LinearGradient>
           </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push('/MenuItems')} activeOpacity={0.85} className='mt-2 mb-2'>
+            <TouchableOpacity onPress={() => router.push('/MenuOptions')} activeOpacity={0.85} className='mt-2 mb-2'>
               <LinearGradient
                 colors={["#34d399", "#ec4899"]}
                 start={[0, 0]}

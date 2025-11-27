@@ -1,14 +1,7 @@
+import { useOrder } from "@/contexts/OrderContext";
+import { Entypo } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
-
-// Simulação do hook, substitua pelo seu contexto real
-const useOrder = () => {
-  return {
-    customerName: "João",
-    restaurantName: "Great-X",
-    tableNumber: "Mesa 5",
-  };
-};
 
 export default function Welcome() {
   const router = useRouter();
@@ -41,6 +34,7 @@ export default function Welcome() {
       {/* Pulsando */}
       <View className="my-12 items-center justify-center">
         <View className="w-40 h-40 rounded-full bg-cyan-400 items-center justify-center opacity-50" />
+        <Entypo name="air" size={50} color="white" className="absolute animate-pulse" />
       </View>
 
       {/* Botão */}

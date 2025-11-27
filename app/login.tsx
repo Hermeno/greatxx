@@ -3,29 +3,23 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { loginUsuario } from '@/service/auth'
-import { Background } from '@react-navigation/elements';
+import { useAuth } from '../contexts/AuthContext';
 
-export default function LoginScreen() {
+export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const { login, isPending } = useAuth();
 
-
-
-  const handleLogin = () => {
-    loginUsuario({ email, senha })
-      .then(() => {
-        alert('Login realizado com sucesso!');
-        router.push('/code');
-      })
-      .catch((error) => {
-        alert('Erro ao realizar login: ' + error.message);
-      });
+  const handleLogin = async () => {
+    try {
+      await login(email, senha);
+      alert('Login realizado com sucesso!');
+      router.push('/code');
+    } catch (error: any) {
+      alert('Erro ao realizar login: ' + (error?.message || error));
+    }
   };
-
-
-
 
   return (
     <View className="flex-1 bg-[#003761] px-8 justify-center">
@@ -36,7 +30,7 @@ export default function LoginScreen() {
         Entrar
       </Text>
 
-      {/* Campo Email/Nome */}
+      {/* Campo Email */}
       <View className="mb-5">
         <Text className="text-white mb-2 font-semibold">Email ou Nome</Text>
         <TextInput
@@ -62,11 +56,11 @@ export default function LoginScreen() {
       </View>
 
       {/* Esqueceu senha */}
-      <TouchableOpacity onPress={() => router.push('/recovery')} className="mb-8">
+      {/* <TouchableOpacity onPress={() => router.push('/recovery')} className="mb-8">
         <Text className="text-[#00F7FF] text-sm text-right font-medium">
           Esqueceu a senha?
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Botão Entrar */}
       <TouchableOpacity

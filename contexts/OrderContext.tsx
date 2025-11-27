@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 
 interface OrderItem {
   id: number;
@@ -7,13 +7,23 @@ interface OrderItem {
   price: number;
 }
 
+interface Order {
+  id: number;
+  created_at: string;
+  total: number;
+  items: OrderItem[];
+}
+
 interface OrderContextType {
   items: OrderItem[];
+  orderHistory: Order[];
   customerName: string;
   restaurantId: number | null;
   restaurantName: string;
   sessionId: string;
   tableNumber: string;
+  transferredAmount: number;
+  isSessionActive: boolean;
   addItem: (item: OrderItem) => void;
   removeItem: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
@@ -22,17 +32,26 @@ interface OrderContextType {
   clearItems: () => void;
   setRestaurant: (id: number, name: string) => void;
   setTableNumber: (table: string) => void;
+  addTransferredAmount: (amount: number) => void;
   submitOrder: () => Promise<void>;
+  getSessionDurationMinutes: () => number;
+  setSessionActive: (active: boolean) => void;
+  addToHistory: (order: Order) => void;
+  resetSession: () => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [orderHistory, setOrderHistory] = useState<Order[]>([]);
   const [customerName] = useState('Fernando');
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [restaurantName, setRestaurantName] = useState('');
   const [tableNumber, setTableNumber] = useState('');
+  const [transferredAmount, setTransferredAmount] = useState(0);
+  const [isSessionActive, setIsSessionActive] = useState(true);
+  const [sessionStartTime] = useState(() => Date.now());
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const addItem = (item: OrderItem) => {
@@ -83,6 +102,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setRestaurantName(name);
   };
 
+  const addTransferredAmount = (amount: number) => {
+    setTransferredAmount(prev => prev + amount);
+  };
+
   const submitOrder = async () => {
     if (!restaurantId || items.length === 0) return;
     
@@ -98,24 +121,49 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       }))
     };
     
-    await fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    });
+    // Mock: simular envio de pedido (em produção, fazer requisição real)
+    console.log('Pedido submetido (mock):', orderData);
     
     // Clear items after submitting but keep session
     clearItems();
   };
 
+  const getSessionDurationMinutes = () => {
+    const now = Date.now();
+    const durationMs = now - sessionStartTime;
+    return Math.floor(durationMs / (1000 * 60));
+  };
+
+  const setSessionActive = (active: boolean) => {
+    setIsSessionActive(active);
+  };
+
+  const addToHistory = (order: Order) => {
+    setOrderHistory(prev => [...prev, order]);
+  };
+
+  const resetSession = () => {
+    // Limpa tudo para uma nova sessão
+    setItems([]);
+    setTransferredAmount(0);
+    setRestaurantId(null);
+    setRestaurantName('');
+    setTableNumber('');
+    setIsSessionActive(true);
+    // orderHistory é mantido (histórico completo da vida do usuário)
+  };
+
   return (
     <OrderContext.Provider value={{
       items,
+      orderHistory,
       customerName,
       restaurantId,
       restaurantName,
       sessionId,
       tableNumber,
+      transferredAmount,
+      isSessionActive,
       addItem,
       removeItem,
       updateQuantity,
@@ -124,7 +172,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       clearItems,
       setRestaurant,
       setTableNumber,
+      addTransferredAmount,
       submitOrder,
+      getSessionDurationMinutes,
+      setSessionActive,
+      addToHistory,
+      resetSession,
     }}>
       {children}
     </OrderContext.Provider>

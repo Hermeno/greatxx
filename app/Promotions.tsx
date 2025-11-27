@@ -1,7 +1,7 @@
 import CloseAccountButton from '@/components/CloseAccountButton';
-import GradientButton from '@/components/GradientButton';
 import Header from '@/components/Header';
 import { useOrder } from '@/contexts/OrderContext';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -21,12 +21,11 @@ export default function Promotions() {
   const [promotionItems, setPromotionItems] = useState<MenuItem[]>([]);
 
   useEffect(() => {
-    if (restaurantId) {
-      fetch(`/api/promotions-items/${restaurantId}`)
-        .then(res => res.json())
-        .then(data => setPromotionItems(data.items || []));
-    }
-  }, [restaurantId]);
+    // TODO: Buscar dados de promoções da API
+    // const response = await fetchPromotions(restaurantId);
+    // setPromotionItems(response.data);
+    setPromotionItems([]);
+  }, []);
 
   const getItemQuantity = (itemId: number) => {
     const item = items.find(i => i.id === itemId);
@@ -53,7 +52,7 @@ export default function Promotions() {
     <View className="flex-1 bg-[#111111]">
       <Header />
 
-      <ScrollView contentContainerStyle={{ paddingTop: 24, paddingBottom: 120, paddingHorizontal: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}>
         <TouchableOpacity
           onPress={() => router.back()}
           className="flex-row items-center mb-6"
@@ -117,9 +116,16 @@ export default function Promotions() {
 
       <View className="absolute bottom-0 left-0 right-0 p-6 bg-[#111111] border-t border-gray-800">
         <View className="space-y-3">
-          <GradientButton onPress={() => router.push('/OrderSummary')}>
-            VER MEU PEDIDO
-          </GradientButton>
+          <TouchableOpacity onPress={() => router.push('/OrderSummary')} activeOpacity={0.85}>
+            <LinearGradient
+              colors={["#34d399", "#ec4899"]}
+              start={[0, 0]}
+              end={[1, 1]}
+              style={{ width: '100%', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 999, marginBottom: 8 }}
+            >
+              <Text className="text-white font-semibold text-lg text-center">ENVIAR PEDIDO</Text>
+            </LinearGradient>
+          </TouchableOpacity>
           <CloseAccountButton onPress={() => router.push('/Checkout')} />
         </View>
       </View>

@@ -1,21 +1,25 @@
+import { Entypo, Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Header() {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
 
-  const IconMenu = () => <Text className="text-white text-2xl">≡</Text>;
-  const IconSearch = () => <Text className="text-white text-xl">🔍</Text>;
-  const IconHistory = () => <Text className="text-white text-xl">🕒</Text>;
+  const IconMenu = () => <Feather name="menu" size={24} color="white" />;
+  // const IconMenu = () => <Text className="text-white text-2xl">≡</Text>;
+  const IconSearch = () => <Feather name="search" size={24} color="white" />;
+  // const IconSearch = () => <Text className="text-white text-xl">🔍</Text>;
+  const IconHistory = () => <Entypo name="time-slot" size={24} color="white" />;
+  // const IconHistory = () => <Text className="text-white text-xl">🕒</Text>;
 
   return (
     <>
       <SafeAreaView className="w-full z-50 bg-black/80 border-b border-gray-800">
         <View className="w-full max-w-md mx-auto px-4 py-4 flex-row items-center justify-between">
-
+          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
           {/* Ícone do menu (esquerda) */}
           <TouchableOpacity className="p-2" onPress={() => setShowMenu(!showMenu)}>
             <IconMenu />

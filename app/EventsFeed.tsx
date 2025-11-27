@@ -36,20 +36,56 @@ export default function EventsFeed() {
   const [activeTab, setActiveTab] = useState<'dia' | 'semana' | 'promocoes'>('dia');
 
   useEffect(() => {
-    if (restaurantId) {
-      fetch(`/api/events/${restaurantId}`)
-        .then(res => res.json())
-        .then(data => setEvents(data.events || []));
+    // Mock: simular busca de eventos, promoções e dados do restaurante
+    // Em produção, isto faria requisições reais à API
+    const mockEvents: Event[] = [
+      {
+        id: 1,
+        title: 'Happy Hour',
+        description: '50% de desconto em cervejas',
+        event_date: '2025-11-26',
+        event_time: '17:00',
+        image_url: 'https://via.placeholder.com/400x300?text=Happy+Hour',
+        event_type: 'promo'
+      },
+      {
+        id: 2,
+        title: 'Live Music',
+        description: 'Música ao vivo com a banda "Groove Masters"',
+        event_date: '2025-11-26',
+        event_time: '20:00',
+        image_url: 'https://via.placeholder.com/400x300?text=Live+Music',
+        event_type: 'evento'
+      }
+    ];
 
-      fetch(`/api/promotions/${restaurantId}`)
-        .then(res => res.json())
-        .then(data => setPromotions(data.promotions || []));
+    const mockPromotions: Promotion[] = [
+      {
+        id: 1,
+        title: 'Combo 2+1',
+        description: 'Compre 2 e ganhe 1 porção grátis',
+        discount_text: '33%',
+        valid_until: '2025-12-31',
+        image_url: 'https://via.placeholder.com/400x300?text=Combo+2%2B1'
+      },
+      {
+        id: 2,
+        title: 'Chopp à Noite',
+        description: 'Chopp com 30% de desconto após 20h',
+        discount_text: '30%',
+        valid_until: '2025-12-31',
+        image_url: 'https://via.placeholder.com/400x300?text=Chopp+30%25'
+      }
+    ];
 
-      fetch(`/api/restaurant/${restaurantId}`)
-        .then(res => res.json())
-        .then(data => setRestaurant(data.restaurant || null));
-    }
-  }, [restaurantId]);
+    const mockRestaurant: Restaurant = {
+      address: 'Rua das Flores, 123 - Centro'
+    };
+
+    setEvents(mockEvents);
+    setPromotions(mockPromotions);
+    setRestaurant(mockRestaurant);
+  }, [restaurantId, restaurantName]);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

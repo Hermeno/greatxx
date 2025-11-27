@@ -1,18 +1,12 @@
-import Header from "@/components/Header";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react-native";
+import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-// import GradientButton from "@/components/GradientButton";
 
-
-// Simulação do hook, substitua pelo seu contexto real
-const useOrder = () => {
-  return {
-    customerName: "João",
-    restaurantId: 1,
-    sessionId: 1,
-  };
-};
+import AlertModal from "@/components/AlertModal";
+import GradientButton from "@/components/GradientButton";
+import Header from "@/components/Header";
+import { useOrder } from "@/contexts/OrderContext";
 
 interface Order {
   id: number;
@@ -27,16 +21,15 @@ interface Order {
 
 export default function SessionHistory() {
   const router = useRouter();
-  const { customerName, restaurantId, sessionId } = useOrder();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { customerName, orderHistory, isSessionActive, getSessionDurationMinutes } = useOrder();
+  const [showAlert, setShowAlert] = useState(false);
 
-  useEffect(() => {
-    if (restaurantId && sessionId) {
-      fetch(`https://seu-backend.com/api/session-orders/${restaurantId}/${sessionId}`)
-        .then((res) => res.json())
-        .then((data) => setOrders(data.orders || []));
-    }
-  }, [restaurantId, sessionId]);
+  const COUVERT_PRICE = 35.0;
+  const COUVERT_TIME_THRESHOLD = 1;
+
+  const shouldChargeCouvert = () => {
+    return getSessionDurationMinutes() > COUVERT_TIME_THRESHOLD;
+  };
 
   const formatDateTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -49,34 +42,52 @@ export default function SessionHistory() {
     });
   };
 
+  const handleBackClick = () => {
+    router.push("/HomeMenu");
+  };
+
   return (
     <View className="flex-1 bg-[#111111]">
+      <AlertModal
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title="Comanda Aberta"
+        message="Você precisa fechar sua comanda antes de sair. Use o botão 'FECHAR CONTA' abaixo."
+      />
+
       <Header />
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
+
+      <ScrollView className="pt-24 pb-8 px-6">
         {/* Botão Voltar */}
         <TouchableOpacity
-          onPress={() => router.back()}
-          className="flex-row items-center mb-6"
+          onPress={handleBackClick}
+          className="flex-row items-center gap-2 mb-6"
         >
-          <Text className="text-white text-lg">← Voltar</Text>
+          <ArrowLeft size={22} color="white" />
+          <Text className="text-white text-base">Voltar</Text>
         </TouchableOpacity>
 
-        {/* Título */}
-        <Text className="text-white text-3xl font-bold mb-4">Histórico</Text>
+        <Text className="text-white text-3xl font-bold mb-8">Histórico</Text>
+
         <Text className="text-gray-400 mb-6">
           Olá {customerName}, aqui estão seus pedidos:
         </Text>
 
-        {/* Lista de pedidos */}
-        {orders.length === 0 ? (
-          <View className="bg-gray-800 rounded-2xl p-6 mb-8">
-            <Text className="text-gray-400 text-center">Nenhum pedido realizado ainda</Text>
+        {/* SEM PEDIDOS */}
+        {orderHistory.length === 0 && !shouldChargeCouvert() ? (
+          <View className="bg-gray-800 rounded-2xl p-8 mb-8">
+            <Text className="text-gray-400 text-center">
+              Nenhum pedido realizado ainda
+            </Text>
           </View>
         ) : (
           <View className="space-y-4 mb-8">
-            {orders.map((order) => (
-              <View key={order.id} className="bg-white rounded-2xl p-4 shadow">
-                <View className="flex-row justify-between mb-3">
+            {orderHistory.map((order: Order) => (
+              <View
+                key={order.id}
+                className="bg-white rounded-2xl p-4 shadow-lg"
+              >
+                <View className="flex-row justify-between items-start mb-3">
                   <View>
                     <Text className="text-gray-900 font-bold text-lg">
                       Pedido #{order.id}
@@ -85,18 +96,22 @@ export default function SessionHistory() {
                       {formatDateTime(order.created_at)}
                     </Text>
                   </View>
-                  <Text className="text-gray-900 font-bold text-xl">
+
+                  <Text className="text-xl font-bold text-gray-900">
                     R$ {order.total.toFixed(2)}
                   </Text>
                 </View>
 
-                <View className="border-t border-gray-200 pt-3 space-y-2">
-                  {order.items?.map((item, idx) => (
-                    <View key={idx} className="flex-row justify-between">
-                      <Text className="text-gray-700 text-sm">
+                <View className="pt-3 border-t border-gray-200 space-y-2">
+                  {order.items?.map((item: any, idx: number) => (
+                    <View
+                      key={idx}
+                      className="flex-row justify-between text-sm"
+                    >
+                      <Text className="text-gray-700">
                         {item.quantity}x {item.name}
                       </Text>
-                      <Text className="text-gray-900 font-medium text-sm">
+                      <Text className="text-gray-900 font-medium">
                         R$ {(item.price * item.quantity).toFixed(2)}
                       </Text>
                     </View>
@@ -104,16 +119,41 @@ export default function SessionHistory() {
                 </View>
               </View>
             ))}
+
+            {/* COUVERT */}
+            {shouldChargeCouvert() && (
+              <View className="bg-yellow-500/10 border-2 border-yellow-500 rounded-2xl p-4 shadow-lg">
+                <View className="flex-row justify-between items-start mb-3">
+                  <View>
+                    <Text className="text-yellow-700 font-bold text-lg">
+                      Couvert
+                    </Text>
+                    <Text className="text-yellow-600 text-sm">
+                      Cobrado após 1 minuto
+                    </Text>
+                  </View>
+
+                  <Text className="text-xl font-bold text-yellow-700">
+                    R$ {COUVERT_PRICE.toFixed(2)}
+                  </Text>
+                </View>
+
+                <View className="pt-3 border-t border-yellow-500/30">
+                  <View className="flex-row justify-between text-sm">
+                    <Text className="text-yellow-700">1x Couvert</Text>
+                    <Text className="text-yellow-700 font-medium">
+                      R$ {COUVERT_PRICE.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
         )}
 
-        {/* Botão voltar */}
-        <TouchableOpacity
-          onPress={() => router.push("/HomeMenu")}
-          className="bg-yellow-500 rounded-lg py-3 mt-4 items-center"
-        >
-          <Text className="text-white font-bold">VOLTAR</Text>
-        </TouchableOpacity>
+        <GradientButton onPress={() => router.push("/HomeMenu")}>
+          VOLTAR
+        </GradientButton>
       </ScrollView>
     </View>
   );

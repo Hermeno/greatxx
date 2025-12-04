@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const { login, isPending } = useAuth();
@@ -15,7 +16,15 @@ export default function Login() {
     try {
       await login(email, senha);
       alert('Login realizado com sucesso!');
-      router.push('/code');
+      // if a redirect param was provided, go there (use replace to avoid back navigation to login)
+      const redirect = params?.redirect as string | undefined;
+      if (redirect) {
+        // redirect may be a pathname like '/ConfirmOrder'
+        // cast to any to avoid strict typing constraints from expo-router path union
+        router.replace(redirect as any);
+      } else {
+        router.push('/code');
+      }
     } catch (error: any) {
       alert('Erro ao realizar login: ' + (error?.message || error));
     }

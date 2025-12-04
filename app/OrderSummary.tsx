@@ -1,6 +1,7 @@
 import CloseAccountButton from '@/components/CloseAccountButton';
 import GradientButton from '@/components/GradientButton';
 import Header from '@/components/Header';
+import { useAuth } from '@/contexts/AuthContext';
 import { useOrder } from '@/contexts/OrderContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -10,6 +11,8 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 export default function OrderSummary() {
   const router = useRouter();
   const { customerName, items } = useOrder();
+  const { user } = useAuth();
+  console.log('usurio', user);
 
   if (items.length === 0) {
     return (
@@ -80,7 +83,15 @@ export default function OrderSummary() {
         </View>
 
         <View className="space-y-4">
-          <TouchableOpacity onPress={() => router.push('/ConfirmOrder')} activeOpacity={0.85}>
+          <TouchableOpacity onPress={() => {
+              // require authentication before confirming order
+              if (user) {
+                router.push('/ConfirmOrder');
+              } else {
+                // redirect to login, include redirect param so user returns here after login
+                router.push({ pathname: '/login', params: { redirect: '/ConfirmOrder' } });
+              }
+            }} activeOpacity={0.85}>
             <LinearGradient
               colors={["#34d399", "#ec4899"]}
               start={[0, 0]}

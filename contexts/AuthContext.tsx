@@ -1,7 +1,9 @@
+import * as SecureStore from 'expo-secure-store';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { cadastroUsuario, loginUsuario } from '../service/auth';
 
 interface User {
-  id: number;
+  id: number | string;
   email: string;
   name: string;
 }
@@ -21,52 +23,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isPending, setIsPending] = useState(true);
 
   useEffect(() => {
-    // Mock: simular verificação de sessão existente
-    // Em produção, isto verificaria um token válido via API
-    setTimeout(() => {
-      setIsPending(false);
-    }, 500);
+    // On mount, check SecureStore for token and user info
+    (async () => {
+      try {
+        const token = await SecureStore.getItemAsync('token');
+        const nome = await SecureStore.getItemAsync('nome');
+        const email = await SecureStore.getItemAsync('email');
+        const usuarioId = await SecureStore.getItemAsync('usuarioId');
+
+        if (token) {
+          setUser({ id: usuarioId ?? '0', email: email ?? '', name: nome ?? '' });
+        }
+      } catch (err) {
+        console.error('Erro checando SecureStore no AuthProvider:', err);
+      } finally {
+        setIsPending(false);
+      }
+    })();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock: simular login bem-sucedido
-    // Em produção, isto faria uma requisição real à API
-    if (!email || !password) {
-      throw new Error('Email e senha são obrigatórios');
+    if (!email || !password) throw new Error('Email e senha são obrigatórios');
+    setIsPending(true);
+    try {
+      const data = await loginUsuario({ email, senha: password });
+      // service/auth.js already stores token and some user info in SecureStore
+      const usuario = data?.usuario ?? null;
+      if (usuario) {
+        setUser({ id: usuario.id ?? '0', email: usuario.email ?? email, name: usuario.nome ?? usuario.name ?? '' });
+      }
+    } catch (err) {
+      throw err;
+    } finally {
+      setIsPending(false);
     }
-
-    const mockUser: User = {
-      id: 1,
-      email: email,
-      name: email.split('@')[0]
-    };
-
-    setUser(mockUser);
-    console.log('Login simulado para:', email);
   };
 
   const register = async (email: string, password: string, name: string) => {
-    // Mock: simular registro bem-sucedido
-    // Em produção, isto faria uma requisição real à API
-    if (!email || !password || !name) {
-      throw new Error('Todos os campos são obrigatórios');
+    if (!email || !password || !name) throw new Error('Todos os campos são obrigatórios');
+    setIsPending(true);
+    try {
+      await cadastroUsuario({ nome: name, email, senha: password });
+      // After successful registration, attempt to log in
+      await login(email, password);
+    } catch (err) {
+      throw err;
+    } finally {
+      setIsPending(false);
     }
-
-    const mockUser: User = {
-      id: Math.floor(Math.random() * 10000),
-      email: email,
-      name: name
-    };
-
-    setUser(mockUser);
-    console.log('Registro simulado para:', email);
   };
 
   const logout = async () => {
-    // Mock: simular logout
-    // Em produção, isto faria uma requisição real à API
-    setUser(null);
-    console.log('Logout simulado');
+    try {
+      await SecureStore.deleteItemAsync('token');
+      await SecureStore.deleteItemAsync('nome');
+      await SecureStore.deleteItemAsync('email');
+      await SecureStore.deleteItemAsync('usuarioId');
+    } catch (err) {
+      console.error('Erro ao limpar SecureStore no logout:', err);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (

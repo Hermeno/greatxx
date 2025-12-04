@@ -1,12 +1,14 @@
 import { Entypo, Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Header() {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
+  const { logout } = useAuth();
 
   const IconMenu = () => <Feather name="menu" size={24} color="white" />;
   // const IconMenu = () => <Text className="text-white text-2xl">≡</Text>;
@@ -34,9 +36,39 @@ export default function Header() {
           </View>
 
           {/* Ícone de pesquisa (direita) */}
-          <TouchableOpacity className="p-2">
-            <IconSearch />
-          </TouchableOpacity>
+          <View className="flex-row items-center">
+            <TouchableOpacity className="p-2" onPress={() => { /* search placeholder */ }}>
+              <IconSearch />
+            </TouchableOpacity>
+
+            {/* Small debug button: clear token / logout */}
+            <TouchableOpacity
+              className="p-2 ml-2"
+              onPress={async () => {
+                try {
+                  // use AuthContext logout to clear user and token
+                  if (typeof logout === 'function') {
+                    await logout();
+                  } else {
+                    const SecureStore = require('expo-secure-store');
+                    await SecureStore.deleteItemAsync('token');
+                    await SecureStore.deleteItemAsync('nome');
+                    await SecureStore.deleteItemAsync('email');
+                    await SecureStore.deleteItemAsync('usuarioId');
+                  }
+
+                  Alert.alert('Sessão', 'Token e usuário limpos.');
+                  // navigate to login after clearing
+                  router.replace('/login');
+                } catch (err) {
+                  console.error('Erro ao limpar sessão:', err);
+                  Alert.alert('Erro', 'Não foi possível limpar a sessão. Veja o console.');
+                }
+              }}
+            >
+              <Text className="text-white text-base">Sair</Text>
+            </TouchableOpacity>
+          </View>
 
         </View>
       </SafeAreaView>

@@ -14,7 +14,6 @@ async function getAuthToken() {
 export const getEstablishments = async () => {
     try {
         const token = await getAuthToken();
-        console.log("Token obtido para estabelecimentos:", token);
         const response = await api.get('/estabelecimentos', {
             headers: {
                 Authorization: `Bearer ${token}`,

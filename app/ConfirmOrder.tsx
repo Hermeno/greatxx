@@ -2,11 +2,13 @@ import { Entypo, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 import { useOrder } from '../contexts/OrderContext';
 
 
 export default function ConfirmOrder() {
   const router = useRouter();
+  const { user } = useAuth();
   const { items, restaurantId } = useOrder();
   const [confirmed, setConfirmed] = useState(false);
   const [destination, setDestination] = useState<'cozinha' | 'bar' | 'ambos'>('ambos');
@@ -44,6 +46,13 @@ export default function ConfirmOrder() {
   }, [items, restaurantId]);
 
   const handleSimulateApproach = async () => {
+    // require authentication before sending order
+    if (!user) {
+      // redirect to login and return; after successful login the user should be able to come back
+      router.push({ pathname: '/login', params: { redirect: '/ConfirmOrder' } });
+      return;
+    }
+
     setConfirmed(true);
 
     await fetch('/api/orders', {
@@ -51,7 +60,7 @@ export default function ConfirmOrder() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         restaurantId,
-        customerName: 'Fernando',
+        customerName: user.name ?? 'Cliente',
         sessionId: Date.now().toString(),
         total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
         items: items.map(item => ({

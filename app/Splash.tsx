@@ -9,7 +9,8 @@ export default function Splash() {
   useEffect(() => {
     (async () => {
       try {
-        const token = await SecureStore.getItemAsync('userToken');
+        // the auth service stores the token under 'token'
+        const token = await SecureStore.getItemAsync('token');
         // show splash for a short while then navigate based on token
         setTimeout(() => {
           if (token) {

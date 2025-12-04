@@ -1,6 +1,7 @@
 import { useOrder } from "@/contexts/OrderContext";
+import { getEstablishments } from "@/service/establishments";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 interface Restaurant {
@@ -16,29 +17,40 @@ export default function ChooseRestaurant() {
   const { setRestaurant } = useOrder();
 
 
-  const [restaurants] = useState<Restaurant[]>([
-    {
-      id: 1,
-      name: "GreatX Bar",
-      logo_url: "https://mocha-cdn.com/019aa8b4-2189-7590-962f-74d834196d52/Logo.png",
-      distance_meters: 350,
-      is_near: true,
-    },
-    {
-      id: 2,
-      name: "Pizzaria Massa Fina",
-      logo_url: "https://images.pexels.com/photos/404558/pexels-photo-404558.jpeg",
-      distance_meters: 2100,
-      is_near: false,
-    },
-    {
-      id: 3,
-      name: "Restaurante Premium",
-      logo_url: "https://images.pexels.com/photos/1435909/pexels-photo-1435909.jpeg",
-      distance_meters: 780,
-      is_near: true,
-    },
-  ]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await getEstablishments();
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((r: any, idx: number) => {
+            const seed = Number(r.id ?? idx + 1);
+            // deterministic pseudo-distance when backend doesn't provide one
+            const distance = r.distance_meters ?? ((seed * 413) % 3000); // 0..2999
+            const isNear = typeof r.is_near === 'boolean' ? r.is_near : (distance < 1000);
+
+            return {
+              id: r.id ?? idx + 1,
+              name: r.nome ?? r.name ?? `Estabelecimento ${idx + 1}`,
+              // backend uses `foto` for images — map to logo_url
+              logo_url: r.foto ?? r.logo_url ?? '',
+              distance_meters: distance,
+              is_near: isNear,
+            } as Restaurant;
+          });
+          setRestaurants(mapped);
+        } else {
+          setRestaurants([]);
+        }
+      } catch (err) {
+        console.warn('Failed to load establishments', err);
+        setRestaurants([]);
+      }
+    })();
+    return () => { mounted = false };
+  }, []);
 
   const formatDistance = (meters: number) => {
     if (meters < 1000) return `${meters} m`;

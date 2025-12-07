@@ -1,5 +1,7 @@
+// QRScanner.tsx
+import { CameraView, PermissionStatus, useCameraPermissions } from "expo-camera";
 import React, { useState } from "react";
-import { Keyboard, Modal, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Keyboard, Modal, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 
 interface QRScannerProps {
   visible: boolean;
@@ -9,82 +11,93 @@ interface QRScannerProps {
 
 export default function QRScanner({ visible, onScan, onClose }: QRScannerProps) {
   const [manualInput, setManualInput] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
+
+  const [permission, requestPermission] = useCameraPermissions();
+
+  const openCamera = async () => {
+    if (permission?.status !== PermissionStatus.GRANTED) {
+      const resp = await requestPermission();
+      if (!resp.granted) return;
+    }
+    setShowCamera(true);
+  };
+
+  const handleBarCodeScanned = ({ data }: { data: string }) => {
+    if (!data) return;
+    onScan(data);
+    setShowCamera(false);
+  };
 
   const handleManualSubmit = () => {
     const value = manualInput.trim();
     if (value) {
       onScan(value);
       setManualInput("");
+      setShowCamera(false);
     }
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-    >
-      {/* Backdrop + dismiss on press outside */}
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View className="absolute inset-0 bg-black/80" />
-      </TouchableWithoutFeedback>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+      {showCamera ? (
+        <View style={{ flex: 1, backgroundColor: "black" }}>
+          <CameraView
+            style={{ flex: 1 }}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+            onBarcodeScanned={handleBarCodeScanned}
+          />
+          <TouchableOpacity onPress={() => setShowCamera(false)} style={{ position: "absolute", top: 40, left: 20, backgroundColor: "rgba(0,0,0,0.5)", padding: 10, borderRadius: 5 }}>
+            <Text style={{ color: "white", fontSize: 18 }}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.overlay}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <Text style={styles.closeText}>✖️</Text>
+                </TouchableOpacity>
 
-      <View className="flex-1 justify-center items-center px-6">
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View className="w-full max-w-md bg-gray-900 rounded-2xl p-6 shadow-xl">
-            {/* Close button */}
-            <TouchableOpacity
-              onPress={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full"
-              accessibilityLabel="Fechar scanner"
-            >
-              <Text className="text-white text-xl">✖️</Text>
-            </TouchableOpacity>
+                <Text style={styles.title}>Número da Mesa</Text>
+                <Text style={styles.subtitle}>Escaneie o QR Code ou insira manualmente</Text>
 
-            {/* Icon */}
-            <View className="items-center justify-center mb-4">
-              <Text className="text-cyan-400 text-5xl">📷</Text>
-            </View>
+                <TextInput
+                  value={manualInput}
+                  onChangeText={setManualInput}
+                  placeholder="Ex: Mesa 5"
+                  placeholderTextColor="#999"
+                  style={styles.input}
+                  returnKeyType="done"
+                  onSubmitEditing={handleManualSubmit}
+                />
 
-            <Text className="text-white text-2xl font-bold text-center mb-2">
-              Scanner de QR Code
-            </Text>
-
-            <Text className="text-gray-400 text-center mb-6">
-              Escaneie o QR Code da mesa ou insira o número manualmente
-            </Text>
-
-            {/* Manual input */}
-            <View className="mb-4">
-              <Text className="text-white text-sm font-semibold mb-2">Número da Mesa</Text>
-              <TextInput
-                value={manualInput}
-                onChangeText={setManualInput}
-                placeholder="Ex: Mesa 5"
-                placeholderTextColor="#9CA3AF"
-                returnKeyType="done"
-                onSubmitEditing={handleManualSubmit}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700"
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={handleManualSubmit}
-              className="w-full py-4 rounded-full bg-cyan-500 items-center justify-center mb-3"
-              accessibilityLabel="Confirmar mesa"
-            >
-              <Text className="text-white text-lg font-semibold">CONFIRMAR MESA</Text>
-            </TouchableOpacity>
-
-            <View className="mt-2 p-3 bg-gray-800 rounded-lg">
-              <Text className="text-gray-400 text-sm text-center">
-                💡 Em produção, a câmera escanearia o QR Code da mesa automaticamente
-              </Text>
-            </View>
+                <TouchableOpacity onPress={handleManualSubmit} style={styles.btnConfirm}>
+                  <Text style={styles.btnText}>CONFIRMAR MESA</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={openCamera} style={styles.btnCamera}>
+                  <Text style={styles.btnText}>📱 ABRIR CÂMERA</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
-      </View>
+      )}
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", alignItems: "center", padding: 20 },
+  modalContent: { width: "100%", maxWidth: 350, backgroundColor: "#222", borderRadius: 20, padding: 20 },
+  closeButton: { position: "absolute", top: 10, right: 10 },
+  closeText: { color: "white", fontSize: 20 },
+  title: { color: "white", fontSize: 24, fontWeight: "bold", textAlign: "center", marginVertical: 10 },
+  subtitle: { color: "#aaa", fontSize: 14, textAlign: "center", marginBottom: 20 },
+  input: { backgroundColor: "#333", color: "white", borderRadius: 8, padding: 12, marginBottom: 15 },
+  btnConfirm: { backgroundColor: "#0ea5e9", padding: 15, borderRadius: 8, marginBottom: 10, alignItems: "center" },
+  btnCamera: { backgroundColor: "#10b981", padding: 15, borderRadius: 8, alignItems: "center" },
+  btnText: { color: "white", fontSize: 16, fontWeight: "600" },
+});

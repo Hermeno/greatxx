@@ -1,17 +1,43 @@
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
 import { Image, Text, View } from "react-native";
 
 export default function Splash() {
   const router = useRouter();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/ChooseRestaurant");
-    }, 2500);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     router.push("/ChooseRestaurant");
+  //   }, 2500);
 
-    return () => clearTimeout(timer);
+  //   return () => clearTimeout(timer);
+  // }, []);
+
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // the auth service stores the token under 'token'
+        const token = await SecureStore.getItemAsync('token');
+        // show splash for a short while then navigate based on token
+        setTimeout(() => {
+          if (token) {
+            router.replace('/ChooseRestaurant');
+          } else {
+            router.replace('/login');
+          }
+        }, 1200);
+      } catch (err) {
+        console.error('Erro ao checar token no splash:', err);
+        router.replace('/login');
+      }
+    })();
   }, []);
+
+
+
 
   return (
     <View className="flex-1 bg-black items-center justify-center p-8">

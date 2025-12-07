@@ -14,7 +14,7 @@ export default function Splash() {
         // show splash for a short while then navigate based on token
         setTimeout(() => {
           if (token) {
-            router.replace('/ChooseRestaurant');
+            router.replace('/login');
           } else {
             router.replace('/login');
           }

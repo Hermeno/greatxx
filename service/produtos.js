@@ -17,7 +17,7 @@ export const getProdutosByCategoria = async (categoriaId: number) => {
     const response = await api.get(`/produtos/categoria/${categoriaId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
+    console.log('Produtos recebidos:', response.data);
     return (response.data || []).map((p: any) => ({
       id: p.id,
       nome: p.nome,

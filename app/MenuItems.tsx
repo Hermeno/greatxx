@@ -1,8 +1,10 @@
 import CloseAccountButton from '@/components/CloseAccountButton';
+import { getCategorias } from '@/service/categorias';
+import { getProdutosByCategoria } from '@/service/produtos';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Header from '../components/Header';
 import { useOrder } from '../contexts/OrderContext';
 
@@ -17,19 +19,83 @@ interface MenuItem {
 }
 
 export default function MenuItems() {
-  const { category } = useLocalSearchParams<{ category: string }>();
+  const { id: idParam, slug: slugParam } = useLocalSearchParams<{ id?: string; slug?: string }>();
   const router = useRouter();
-  const { addItem, items: cartItems } = useOrder();
+  const { addItem, items: cartItems, updateQuantity, removeItem } = useOrder();
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [activeTab, setActiveTab] = useState<'menu' | 'promotions'>('menu');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // TODO: Buscar dados reais da API baseado na categoria
-    // const response = await fetchMenuItemsByCategory(category);
-    // setMenuItems(response.data);
-    setMenuItems([]);
-  }, [category]);
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        // load categories to find the id that matches the slug param (fallback)
+        const categorias = await getCategorias();
+        const slugQuery = (slugParam ?? '').toString();
+
+        // helper to normalize and slugify same as MenuOptions
+        const slugify = (s: string) =>
+          encodeURIComponent(
+            s
+              .normalize('NFD')
+              .replace(/\p{Diacritic}/gu, '')
+              .replace(/[^\w\s-]/g, '')
+              .trim()
+              .replace(/\s+/g, '-')
+              .toLowerCase()
+          );
+
+        let categoriaId: number | null = null;
+
+        // prefer explicit id param when present
+        if (idParam) {
+          const parsed = Number(idParam);
+          if (!isNaN(parsed)) categoriaId = parsed;
+        }
+
+        // otherwise try matching slug (fallback)
+        if (categoriaId == null && Array.isArray(categorias)) {
+          for (let i = 0; i < categorias.length; i++) {
+            const c = categorias[i];
+            const rawName = (c.nome ?? c.name ?? '').toString();
+            const candidate = slugify(c.slug ?? rawName);
+            if (candidate === slugQuery) {
+              categoriaId = Number(c.id ?? null);
+              break;
+            }
+          }
+        }
+
+        if (categoriaId != null) {
+          const produtos = await getProdutosByCategoria(Number(categoriaId));
+          if (mounted) {
+            const mapped: MenuItem[] = produtos.map((p: any) => ({
+              id: p.id,
+              name: p.nome ?? p.name ?? 'Produto',
+              description: '',
+              price: Number(p.preco ?? p.price ?? 0),
+              image_url: p.imagem ?? p.foto ?? '',
+              is_promotion: !!p.is_promotion,
+              category: slugParam ?? (idParam ?? ''),
+            }));
+            setMenuItems(mapped);
+          }
+        } else {
+          // no category id found
+          if (mounted) setMenuItems([]);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar produtos da categoria', err);
+        if (mounted) setMenuItems([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false };
+  }, [idParam, slugParam]);
 
   const getItemQuantity = (itemId: number) => {
     const item = cartItems.find((i: any) => i.id === itemId);
@@ -48,9 +114,11 @@ export default function MenuItems() {
   const handleSubtract = (itemId: number) => {
     const currentQty = getItemQuantity(itemId);
     if (currentQty > 1) {
-      // TODO: Implementar updateQuantity no contexto
+      // decrement quantity
+      updateQuantity(itemId, currentQty - 1);
     } else {
-      // TODO: Implementar removeItem no contexto
+      // remove from cart
+      removeItem(itemId);
     }
   };
 
@@ -64,7 +132,7 @@ export default function MenuItems() {
     }
   }, [activeTab]);
 
-  const filteredItems = activeTab === 'promotions' 
+  const filteredItems = activeTab === 'promotions'
     ? menuItems.filter((item: MenuItem) => item.is_promotion)
     : menuItems.filter((item: MenuItem) => !item.is_promotion);
 
@@ -104,34 +172,51 @@ export default function MenuItems() {
         </View>
 
         <View className="space-y-4">
-          {filteredItems.map((item) => (
-            <View key={item.id} className="bg-white mt-2 rounded-2xl p-4 shadow-lg flex-row gap-4">
-              <Image 
-                source={{ uri: item.image_url }}
-                className="w-24 h-24 rounded-lg"
-              />
-              <View className="flex-1 justify-between">
-                <Text className="text-gray-900 font-bold text-lg">{item.name}</Text>
-                <Text className="text-xl font-bold text-gray-900 mt-1">R$ {item.price.toFixed(2)}</Text>
-                <View className="flex-row items-center gap-3 mt-3">
-                  <Text className="text-gray-600 text-sm">Qtd</Text>
-                  <TouchableOpacity
-                    onPress={() => handleSubtract(item.id)}
-                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
-                  >
-                    <Text className="text-gray-700 text-lg">-</Text>
-                  </TouchableOpacity>
-                  <Text className="text-gray-900 font-semibold w-8 text-center">{getItemQuantity(item.id)}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleAdd(item)}
-                    className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center"
-                  >
-                    <Text className="text-white text-lg">+</Text>
-                  </TouchableOpacity>
+          {loading ? (
+            <View className="items-center py-8">
+              <ActivityIndicator size="large" color="#34d399" />
+              <Text className="text-gray-400 mt-2">Carregando pratos...</Text>
+            </View>
+          ) : filteredItems.length === 0 ? (
+            <View className="items-center py-8">
+              <Text className="text-gray-400">Nenhum item encontrado nesta categoria.</Text>
+            </View>
+          ) : (
+            filteredItems.map((item) => (
+              <View key={item.id} className="bg-white mt-2 rounded-2xl p-4 shadow-lg flex-row gap-4">
+                <Image 
+                  source={{ uri: item.image_url }}
+                  className="w-24 h-24 rounded-lg"
+                />
+                <View className="flex-1 justify-between">
+                  <Text className="text-gray-900 font-bold text-lg">{item.name}</Text>
+                  <Text className="text-xl font-bold text-gray-900 mt-1">R$ {item.price.toFixed(2)}</Text>
+
+                  <View className="flex-row items-center gap-3 mt-3">
+                    <Text className="text-gray-600 text-sm">Qtd</Text>
+                    <View className="flex-row items-center bg-gray-100 rounded-full px-2 py-1">
+                      <TouchableOpacity
+                        onPress={() => handleSubtract(item.id)}
+                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
+                      >
+                        <Text className="text-gray-700 text-lg">-</Text>
+                      </TouchableOpacity>
+
+                      <Text className="text-gray-900 font-semibold w-10 text-center">{getItemQuantity(item.id)}</Text>
+
+                      <TouchableOpacity
+                        onPress={() => handleAdd(item)}
+                        className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center"
+                      >
+                        <Text className="text-gray-900  text-lg">+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
                 </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
       </ScrollView>
 

@@ -96,15 +96,8 @@ export default function HomeMenu() {
 
         {/* BOTÃO ESCANEAR */}
         {!tableNumber && (
-          <TouchableOpacity onPress={() => setShowScanner(true)} activeOpacity={0.85} className="mb-6">
-
-        {!tableNumber && (
-          <TouchableOpacity onPress={() => setShowScanner(true)} className="w-full mb-6 py-4 px-6 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-cyan-400 items-center justify-center"
-          >
+          <TouchableOpacity onPress={() => setShowScanner(true)} activeOpacity={0.85} className="w-full mb-6 py-4 px-6 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-cyan-400 items-center justify-center">
             <Text className="text-white font-semibold text-lg">ESCANEAR QR CODE DA MESA</Text>
-          </TouchableOpacity>
-        )}
-
           </TouchableOpacity>
         )}
 

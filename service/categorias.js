@@ -7,7 +7,7 @@ async function getAuthToken() {
     return token;
   } catch (error) {
     console.error("Erro ao obter token:", error);
-    return null;
+    return null; 
   }
 }
 

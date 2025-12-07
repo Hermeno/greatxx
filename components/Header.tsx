@@ -20,7 +20,7 @@ export default function Header() {
   return (
     <>
       <SafeAreaView className="w-full z-50 bg-black/80 border-b border-gray-800">
-        <View className="w-full max-w-md mx-auto px-4 py-4 flex-row items-center justify-between">
+        <View className="w-full max-w-md mx-auto px-4 py-2 flex-row items-center justify-between">
           <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
           {/* Ícone do menu (esquerda) */}
           <TouchableOpacity className="p-2" onPress={() => setShowMenu(!showMenu)}>

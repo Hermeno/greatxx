@@ -1,5 +1,7 @@
 import Header from "@/components/Header";
 import { useOrder } from "@/contexts/OrderContext";
+import { useAuth } from '@/contexts/AuthContext';
+import { sendOrder } from '@/service/order';
 import { useRouter } from "expo-router";
 import { AlertCircle, ArrowLeft, Banknote, Smartphone, Users, Wallet } from "lucide-react-native";
 import { useState } from "react";
@@ -7,7 +9,8 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function Checkout() {
   const router = useRouter();
-  const { customerName, transferredAmount, getSessionDurationMinutes, items } = useOrder();
+  const { customerName, transferredAmount, getSessionDurationMinutes, items, restaurantId, tableNumber, sessionId } = useOrder();
+  const { user } = useAuth();
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [showCouvertWarning, setShowCouvertWarning] = useState(false);
 
@@ -35,15 +38,48 @@ export default function Checkout() {
 
   const allItems = getAllItems();
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (allItems.length === 0 && shouldChargeCouvert()) {
       setShowCouvertWarning(true);
       return;
     }
 
-    if (selectedPayment === 'saved') router.push('/PaymentComplete');
-    else if (selectedPayment === 'nfc') router.push('/NFCPayment');
-    else if (selectedPayment === 'cashier') router.push('/CashierPayment');
+    // Require auth to send order; if not logged, redirect to login
+    if (!user) {
+      router.push({ pathname: '/login', params: { redirect: '/Checkout' } });
+      return;
+    }
+
+    // Build payload matching backend expectations: items sum must match total (sum of item.price * quantity)
+    const payload = {
+      userId: String(user.id),
+      restaurantId: String(restaurantId ?? ''),
+      mesa: tableNumber ?? undefined,
+      sessionId: String(sessionId ?? ''),
+      customerName: String(customerName ?? ''),
+      items: allItems.map(i => ({ menuItemId: String(i.id), quantity: i.quantity, price: i.price })),
+      total: allItems.reduce((acc, it) => acc + (it.price * it.quantity), 0),
+    };
+
+    try {
+      const resp = await sendOrder(payload);
+      console.log('Pedido enviado:', resp);
+      // Navigate according to payment selection
+      if (selectedPayment === 'saved') router.push('/PaymentComplete');
+      else if (selectedPayment === 'nfc') router.push('/NFCPayment');
+      else if (selectedPayment === 'cashier') router.push('/CashierPayment');
+    } catch (err) {
+      console.error('Erro enviando pedido:', err);
+      // simplest UX: show an alert and keep user on checkout
+      try {
+        // react-native Alert
+        const { Alert } = await import('react-native');
+        Alert.alert('Erro', 'Não foi possível enviar o pedido. Tente novamente.');
+      } catch (e) {
+        // fallback console
+        console.error(e);
+      }
+    }
   };
 
   const handleCouvertOnlyPayment = () => {
